@@ -28,7 +28,15 @@ ARUCO_DICT = {
 }
 
 print("[INFO] loading image...")
-image = cv2.imread("aruco\TEST9.jpg")
+
+import tkinter
+from tkinter import filedialog
+
+tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
+
+imagePath = filedialog.askopenfilename(title="select and image to detect aruco codes")
+
+image = cv2.imread(imagePath)
 # image = cv2.imread("aruco\TestImageDifferentColors.png")
 # image = imutils.resize(image, width=600)
 # verify that the supplied ArUCo tag exists and is supported by
@@ -42,11 +50,14 @@ if ARUCO_DICT.get(arucoDict, None) is None:
 # load the ArUCo dictionary, grab the ArUCo parameters, and detect
 # the markers
 print("[INFO] detecting '{}' tags...".format(arucoDict))
-arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[arucoDict])
-arucoParams = cv2.aruco.DetectorParameters_create()
+
+arucoDict = cv2.aruco.getPredefinedDictionary(ARUCO_DICT[arucoDict])
+arucoParams =  cv2.aruco.DetectorParameters()
 arucoParams.minMarkerPerimeterRate=0.01
-(corners, ids, rejected) = cv2.aruco.detectMarkers(image, arucoDict,
-	parameters=arucoParams)
+detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
+
+(corners, ids, rejected) = detector.detectMarkers(image)
+
 
 rejectedImage=image.copy()
 cv2.aruco.drawDetectedMarkers(rejectedImage, rejected, borderColor=(100, 0, 240))
@@ -92,4 +103,12 @@ if len(corners) > 0:
 cv2.imshow("Rejected Markers", rejectedImage)
 cv2.imshow("Detected Markers", image)
 cv2.waitKey(0)
-cv2.imwrite("./DifferentColorMarkers-Smaller.jpg",image)
+
+saveImagePath = filedialog.asksaveasfilename(title="save image with detected codes", filetypes=[("JPG","*.jpg")])
+if(saveImagePath == ""):
+	print("No save path selected. Exiting.")
+	exit()
+if(not saveImagePath.endswith(".jpg")):
+	saveImagePath += ".jpg"
+cv2.imwrite(saveImagePath + ".jpg",image)
+print("saved image to " +saveImagePath)
